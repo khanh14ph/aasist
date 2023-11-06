@@ -17,20 +17,20 @@ def genSpoof_list(dir_meta, is_train=False, is_eval=False):
 
     if is_train:
         for line in l_meta:
-            _, key, _, _, label = line.strip().split(" ")
+            key,label = line.strip().split("\t")
             file_list.append(key)
             d_meta[key] = 1 if label == "bonafide" else 0
         return d_meta, file_list
 
     elif is_eval:
         for line in l_meta:
-            _, key, _, _, _ = line.strip().split(" ")
+            key,label = line.strip().split("\t")
             #key = line.strip()
             file_list.append(key)
         return file_list
     else:
         for line in l_meta:
-            _, key, _, _, label = line.strip().split(" ")
+            key,label = line.strip().split("\t")
             file_list.append(key)
             d_meta[key] = 1 if label == "bonafide" else 0
         return d_meta, file_list
@@ -60,12 +60,11 @@ def pad_random(x: np.ndarray, max_len: int = 64600):
 
 
 class Dataset_ASVspoof2019_train(Dataset):
-    def __init__(self, list_IDs, labels, base_dir):
+    def __init__(self, list_IDs, labels):
         """self.list_IDs	: list of strings (each string: utt key),
            self.labels      : dictionary (key: utt key, value: label integer)"""
         self.list_IDs = list_IDs
         self.labels = labels
-        self.base_dir = base_dir
         self.cut = 64600  # take ~4 sec audio (64600 samples)
 
     def __len__(self):
@@ -73,7 +72,7 @@ class Dataset_ASVspoof2019_train(Dataset):
 
     def __getitem__(self, index):
         key = self.list_IDs[index]
-        X, _ = sf.read(str(self.base_dir / f"flac/{key}.flac"))
+        X, _ = sf.read(key)
         X_pad = pad_random(X, self.cut)
         x_inp = Tensor(X_pad)
         y = self.labels[key]
@@ -81,11 +80,10 @@ class Dataset_ASVspoof2019_train(Dataset):
 
 
 class Dataset_ASVspoof2019_devNeval(Dataset):
-    def __init__(self, list_IDs, base_dir):
+    def __init__(self, list_IDs):
         """self.list_IDs	: list of strings (each string: utt key),
         """
         self.list_IDs = list_IDs
-        self.base_dir = base_dir
         self.cut = 64600  # take ~4 sec audio (64600 samples)
 
     def __len__(self):
@@ -93,7 +91,7 @@ class Dataset_ASVspoof2019_devNeval(Dataset):
 
     def __getitem__(self, index):
         key = self.list_IDs[index]
-        X, _ = sf.read(str(self.base_dir / f"flac/{key}.flac"))
+        X, _ = sf.read(key)
         X_pad = pad(X, self.cut)
         x_inp = Tensor(X_pad)
         return x_inp, key
